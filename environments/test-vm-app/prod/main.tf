@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "app_rg" {
 # 2. 動態查詢子網
 data "azurerm_subnet" "shared_subnet" {
   name                 = "${var.test_vm_app_app_name}-${var.env}-subnet" # 透過變數動態拼接
-  virtual_network_name = "core-hub-vnet"
+  virtual_network_name = "core-${var.env}-vnet"
   resource_group_name  = "azure-infra-core-network-rg"
 }
 
