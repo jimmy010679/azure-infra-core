@@ -1,7 +1,7 @@
 # 1. 建立資源組
 resource "azurerm_resource_group" "network_rg" {
   name     = "azure-infra-core-network-rg" # 網路專用資料夾
-  location = "Taiwan North"
+  location = "Japan East"
 }
 
 # 2. 建立 核心基礎 VNet

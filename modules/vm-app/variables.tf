@@ -28,3 +28,15 @@ variable "vm_size" {
   type        = string
   default     = "Standard_B2s"
 }
+
+variable "app_port" {
+  description = "應用程式服務所使用的 Port (e.g., 3000, 8080)"
+  type        = number
+  default     = 3000
+}
+
+variable "appgw_subnet_prefix" {
+  description = "允許連入的 Application Gateway 子網網段"
+  type        = string
+  default     = "10.1.10.0/24" # 預設 AppGW 網段
+}

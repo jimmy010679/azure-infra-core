@@ -5,7 +5,7 @@ variable "env" {
 
 variable "location" {
   type    = string
-  default = "Taiwan North"
+  default = "Japan East"
 }
 
 variable "test_vm_app_app_name" {

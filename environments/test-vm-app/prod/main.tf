@@ -20,4 +20,6 @@ module "vm_infra" {
   resource_prefix     = var.test_vm_app_app_name
 
   subnet_id           = data.azurerm_subnet.shared_subnet.id
+  app_port            = 3000
+  appgw_subnet_prefix = "10.1.10.0/24"
 }
