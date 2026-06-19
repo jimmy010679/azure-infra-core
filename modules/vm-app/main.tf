@@ -1,3 +1,6 @@
+# =====================================================================
+# 應用基礎設施
+# =====================================================================
 # 1. 拋棄式金鑰
 resource "tls_private_key" "discardable_ssh" {
   algorithm = "RSA"
@@ -38,7 +41,7 @@ resource "azurerm_network_security_group" "vm_nsg" {
     destination_address_prefix = "*"
   }
 
-  # 網頁安全：3000 
+  # 網頁安全：指定 app_port 只允許 Application Gateway 子網轉發流量
   security_rule {
     name                       = "AllowAppGatewayToNodejs"
     priority                   = 1002
@@ -84,7 +87,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
+    sku       = "22_04-lts-gen2"
     version   = "latest"
   }
 
@@ -94,12 +97,53 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-# 6. VM 加裝 AADLoginForLinux 擴充功能 (讓作業系統底層直接對接 Azure Entra ID 身分驗證)
+# 6. VM 加裝 AADSSHLoginForLinux 擴充功能 (讓作業系統底層直接對接 Azure Entra ID 身分驗證)
 resource "azurerm_virtual_machine_extension" "entra_id_login" {
-  name                       = "AADLoginForLinux"
+  name                       = "AADSSHLoginForLinux"
   virtual_machine_id         = azurerm_linux_virtual_machine.vm.id
+
   publisher                  = "Microsoft.Azure.ActiveDirectory"
-  type                       = "AADLoginForLinux"
+  type                       = "AADSSHLoginForLinux" # 舊版 AADLoginForLinux
   type_handler_version       = "1.0"
+
   auto_upgrade_minor_version = true
+}
+
+# 7. 開機腳本
+resource "azurerm_virtual_machine_extension" "custom_script" {
+  name                 = "NodeAppInstall"
+  virtual_machine_id   = azurerm_linux_virtual_machine.vm.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.1"
+
+  protected_settings = <<SETTINGS
+    {
+      "script": "${var.custom_script_base64}"
+    }
+  SETTINGS
+}
+
+# =====================================================================
+# Azure Key Vault
+# =====================================================================
+
+# 1. 動態撈取目前執行應用層部署的身分
+data "azurerm_client_config" "current" {}
+
+# 2. 引用大管家的保險箱 (本體在 base-network)
+data "azurerm_key_vault" "remote_kv" {
+  name                = "core-${var.env}-kv-kyj"
+  resource_group_name = "azure-infra-core-network-rg"
+}
+
+# 3. 把私鑰當作加密秘密塞進 Key Vault 的核心抽屜中
+resource "azurerm_key_vault_secret" "ssh_private_key" {
+  name         = "${var.resource_prefix}-${var.env}-ssh-key"
+  value        = tls_private_key.discardable_ssh.private_key_pem
+  key_vault_id = data.azurerm_key_vault.remote_kv.id
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }

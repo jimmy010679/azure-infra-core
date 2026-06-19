@@ -18,3 +18,6 @@ plan.out
 
 # Mac 系統檔
 .DS_Store
+
+# 金鑰
+id_rsa_tmp

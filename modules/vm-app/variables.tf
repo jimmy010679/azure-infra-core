@@ -19,14 +19,14 @@ variable "location" {
 }
 
 variable "subnet_id" {
-  description = "從大管家網路端撈出來的 Subnet ID"
+  description = "從 Landing Zone 網路端撈出來的 Subnet ID"
   type        = string
 }
 
 variable "vm_size" {
   description = "VM 的規格大小"
   type        = string
-  default     = "Standard_B2s"
+  default     = "Standard_D2s_v6"
 }
 
 variable "app_port" {
@@ -39,4 +39,10 @@ variable "appgw_subnet_prefix" {
   description = "允許連入的 Application Gateway 子網網段"
   type        = string
   default     = "10.1.10.0/24" # 預設 AppGW 網段
+}
+
+variable "custom_script_base64" {
+  type        = string
+  description = "由外部呼叫端傳入，已經經過 Base64 編碼的開機自動化腳本"
+  default     = ""
 }
