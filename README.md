@@ -17,11 +17,22 @@
 
 ```text
 .
-├── environments/
-│   └── base-network/           # 核心地基網路層（大管家）
-│       ├── main.tf             # 定義 VNet, Subnet, NAT Gateway, Bastion, Key Vault
+├── environments/               # 【環境與部署層】負責綁定具體參數並執行實體部署
+│   ├── base-network/           # 核心地基網路層（全環境共用大管家）
+│   │   ├── main.tf             # 定義資源群組、核心 VNet 與實體 Subnet 地基
+│   │   ├── appgw.tf            # 負載均衡專用（Application Gateway 流量分流與入網 PIP）
+│   │   ├── natgw.tf            # 出網網關專用（NAT Gateway 與固定公網 PIP 生效綁定）
+│   │   ├── bastion.tf          # 維運跳板專用（Azure Bastion 託管主機與專屬子網）
+│   │   ├── keyvault.tf         # 保險箱專用（Azure Key Vault 與對應資安權限策略）
+│   │   ├── providers.tf        # 宣告 Azure 供應商與 Backend 狀態鎖設定
+│   │   └── variables.tf        # 網路層全域變數與網段定義
+│   │
+│   └── test-vm-app/            # 專案應用部署入口
+│       ├── main.tf             # 呼叫下游 Module，將應用實體注入核心網路
 │       ├── providers.tf
 │       └── variables.tf
-└── modules/
-    ├── vm-app/                 # 單機版應用基礎設施模組 (對齊核心 Key Vault 託管)
-    └── vm-app-scale/           # 水平擴展集 (VMSS) 基礎設施模組 (自帶拓撲與自動化腳本)
+│
+└── modules/                    # 【可複用模組層】定義標準化架構藍圖，不保存任何環境狀態
+    ├── vm-app/                 # 單個 VM 應用基礎設施模組 (對齊核心 Key Vault 託管金鑰)
+    └── vm-app-scale/           # 水平擴展集 (VMSS) 基礎設施模組 (自帶網路拓撲、AAD 穿透與自動化擴展)
+```
